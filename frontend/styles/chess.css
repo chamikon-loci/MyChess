@@ -1,0 +1,26 @@
+.chess-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    margin: 50px;
+    border: 1px solid black;
+}
+
+.light {
+    height: 100px;
+    background-color: white;
+    border: transparent;
+}
+
+.light:hover {
+    background-color: rgb(157, 157, 157);
+}
+
+.dark {
+    height: 100px;
+    background-color: brown;
+    border: transparent;
+}
+
+.dark:hover {
+    background-color: rgb(157, 157, 157);
+}

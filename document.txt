@@ -1,0 +1,29 @@
+Tech Stack : 
+React.js สำหรับหน้า UI ฝั่ง Client
+Express.js(Node.js) สำหรับการสร้าง Server REST API
+PostgreSQL สำหรับเก็บข้อมูล
+Socket.io สำหรับ Real-time communication ระหว่าง Clients กับ Server
+CORS สำหรับให้ฝั่ง Client ติดต่อกับ Server ได้จากคนละ Origin
+
+ตัวเกมหมากรุก
+- ตาราง 8x8
+- การเดินหมากตามกฏของแต่ละตัว
+- กฏการกิน
+- กฏการเข้าป้อม
+- กฏ En Passant
+- กฏการ Check
+- กฏการ Checkmate
+- กฏการ Promotion
+- กฏการ Draw/Statemate
+
+การสร้างห้องเกม
+- สร้างห้อง 1v1
+- แสดงห้องที่หน้า UI ให้กด Join
+- ในห้องมีครบสองคนแล้วเจ้าของห้องกด Start
+
+_________________________________________________________
+
+Development Plan
+1. สร้าง Server พื้นฐาน [Done]
+2. เชื่อมต่อ Frontend กับ Socket.io [Done]
+3. สร้างหน้า UI ตารางหมากรุก มีตัวหมากและเดินได้ตามกฏจริง
