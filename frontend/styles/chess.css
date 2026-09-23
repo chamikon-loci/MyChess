@@ -24,3 +24,7 @@
 .dark:hover {
     background-color: rgb(157, 157, 157);
 }
+
+.pieces {
+    height: 100px;
+}
