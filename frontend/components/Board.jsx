@@ -1,7 +1,7 @@
 import '../styles/chess.css'
 import blackRook from '../images/br.png'
 import blackBishop from '../images/bb.png'
-import blackKnight from '../images/bk.png'
+import blackKnight from '../images/bn.png'
 import blackQueen from '../images/bq.png'
 import blackKing from '../images/bk.png'
 
@@ -9,7 +9,7 @@ import blackPawn from '../images/bp.png'
 
 import whiteRook from '../images/wr.png'
 import whiteBishop from '../images/wb.png'
-import whiteKnight from '../images/wk.png'
+import whiteKnight from '../images/wn.png'
 import whiteQueen from '../images/wq.png'
 import whiteKing from '../images/wk.png'
 
@@ -72,7 +72,7 @@ const Board = () => {
                     const position = c+r;
                     return (
                         <button key={position} className={whatColor(i, j)}>
-                            <img src={[pieces[position]]} className='pieces'/>
+                            <img src={pieces[position]} className='pieces'/>
                         </button>
                     )
                 }))
