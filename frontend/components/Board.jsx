@@ -227,6 +227,29 @@ const Board = () => {
         return true
     }
 
+    function isValidPawnCapture(from, to, piece) {
+        const fromCol = from.charCodeAt(0)
+        const fromRow = Number(from[1])
+
+        const toCol = to.charCodeAt(0)
+        const toRow = Number(to[1])
+
+        if(piece === whitePawn) {
+            if(Math.abs(toCol - fromCol) === 1 && toRow - fromRow === 1)
+                return true
+
+            return false
+        }
+
+        if(piece === blackPawn) {
+            if(Math.abs(toCol - fromCol) === 1 && fromRow - toRow === 1)
+                return true
+            return false
+        }
+
+        return false
+    }
+
     function movePiece(position) {
         if(select === null) {
             if(pieces[position] === '') return;
@@ -234,14 +257,19 @@ const Board = () => {
             if(getPieceColor(pieces[position]) !== turn) return
             
             setPrevPos(position)
-            setSelect(pieces[position])
+            setSelect(pieces[position]) 
             return;
         }
         if(pieces[position] === '' || capture(prevPos, position)) {
 
             /* WHITE TURN */
             if(select === whitePawn && turn === 'white') {
-                if(isValidPawnMove(prevPos, position, select)) {
+                if(isValidPawnMove(prevPos, position, select) && pieces[position] === ''){
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('black')
+                } else if(isValidPawnCapture(prevPos, position, select)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -309,7 +337,12 @@ const Board = () => {
 
             /* BLACK TURN */
             if(select === blackPawn && turn === 'black') {
-                if(isValidPawnMove(prevPos, position, select)) {
+                if(isValidPawnMove(prevPos, position, select) && pieces[position] === '') {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
+                } else if(isValidPawnCapture(prevPos, position, select)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
