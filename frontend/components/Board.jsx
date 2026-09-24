@@ -43,6 +43,8 @@ const Board = () => {
     const [select, setSelect] = useState(null)
     const [prevPos, setPrevPos] = useState('')
 
+    const [turn, setTurn] = useState('white')
+
     function isClearPath(from, to) {
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
@@ -196,14 +198,17 @@ const Board = () => {
             piece === whiteBishop ||
             piece === whiteQueen ||
             piece === whiteKing
-        ) { 
-            return 'white'
-        } else if(piece !== '') {
-            return 'black'
-        } else {
-            return null
-        }
+        ) return 'white'
 
+        if(piece === blackPawn ||
+            piece === blackRook ||
+            piece === blackKnight ||
+            piece === blackBishop ||
+            piece === blackQueen ||
+            piece === blackKing
+        ) return 'black'
+
+        return null
     }
 
     function capture(from ,to) {
@@ -222,9 +227,11 @@ const Board = () => {
         return true
     }
 
-    function movePiece(position) {    
+    function movePiece(position) {
         if(select === null) {
             if(pieces[position] === '') return;
+
+            if(getPieceColor(pieces[position]) !== turn) return
             
             setPrevPos(position)
             setSelect(pieces[position])
@@ -232,70 +239,143 @@ const Board = () => {
         }
         if(pieces[position] === '' || capture(prevPos, position)) {
 
-            if(select === whitePawn || select === blackPawn) {
+            /* WHITE TURN */
+            if(select === whitePawn && turn === 'white') {
                 if(isValidPawnMove(prevPos, position, select)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
+                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
             }
 
-            if(select === whiteRook || select === blackRook) {
+            if(select === whiteRook && turn === 'white') {
                 if(isValidRookMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
+                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
             }
 
-            if(select === whiteKnight || select === blackKnight) {
+            if(select === whiteKnight && turn === 'white') {
                 if(isValidKnightMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
+                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
 
             }
 
-            if(select === whiteBishop || select === blackBishop) {
+            if(select === whiteBishop && turn === 'white') {
                 if(isValidBishopMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
+                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
             }
 
-            if(select === whiteQueen || select === blackQueen) {
+            if(select === whiteQueen && turn === 'white') {
                 if(isValidQueenMove(prevPos, position)){
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
+                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
             }
 
-            if(select === whiteKing || select === blackKing) {
+            if(select === whiteKing && turn === 'white') {
                 if(isValidKingMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
+                    setTurn('black')
+                } else {
+                    setSelect(null)
+                }
+            }
+
+            /* BLACK TURN */
+            if(select === blackPawn && turn === 'black') {
+                if(isValidPawnMove(prevPos, position, select)) {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
+                } else {
+                    setSelect(null)
+                }
+            }
+
+            if(select === blackRook && turn === 'black') {
+                if(isValidRookMove(prevPos, position)) {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
+                } else {
+                    setSelect(null)
+                }
+            }
+
+            if(select === blackKnight && turn === 'black') {
+                if(isValidKnightMove(prevPos, position)) {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
+                } else {
+                    setSelect(null)
+                }
+
+            }
+
+            if(select === blackBishop && turn === 'black') {
+                if(isValidBishopMove(prevPos, position)) {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
+                } else {
+                    setSelect(null)
+                }
+            }
+
+            if(select === blackQueen && turn === 'black') {
+                if(isValidQueenMove(prevPos, position)){
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
+                } else {
+                    setSelect(null)
+                }
+            }
+
+            if(select === blackKing && turn === 'black') {
+                if(isValidKingMove(prevPos, position)) {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                    setTurn('white')
                 } else {
                     setSelect(null)
                 }
             }
         }
     }
-
-    const [turn, setTurn] = useState('White')
 
     return (
         <div className='chess-board'>
