@@ -45,7 +45,7 @@ const Board = () => {
 
     const [turn, setTurn] = useState('white')
 
-    function isClearPath(from, to) {
+    function isClearPath(from, to, board) {
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
 
@@ -62,7 +62,7 @@ const Board = () => {
 
             const tempPos = String.fromCharCode(currentCol) + currentRow
             console.log(tempPos)
-            if(pieces[tempPos] !== '') 
+            if(board[tempPos] !== '') 
                 return false
 
             currentCol += colMove
@@ -72,64 +72,132 @@ const Board = () => {
         return true
     }
 
-    function findKing(color) {
+    function findKing(color, board) {
         const king = color === 'white' ? whiteKing : blackKing
 
-        for(const position of Object.keys(pieces)) {
-            if(pieces[position] === king)
+        for(const position of Object.keys(board)) {
+            if(board[position] === king)
                 return position
         }
 
         return null
-    }  
+    }
 
-    function isKingInCheck(color) {
-        const kingPosition = findKing(color)
+    function wouldLeaveKingInCheck(from, to, color) {
+        const tempBoard = {...pieces}
+
+        tempBoard[to] = tempBoard[from]
+        tempBoard[from] = ''
+
+        return isKingInCheck(color, tempBoard)
+    }
+
+    function isCheckMate(color) {
+        const tempBoard = {...pieces}
+
+        if(!isKingInCheck(color, tempBoard))
+            return false
+
+        for(const position of Object.keys(tempBoard)) {
+            const piece = tempBoard[position]
+
+            if(getPieceColor(piece) !== color) 
+                continue
+
+            for(const target of Object.keys(tempBoard)) {
+
+                const targetPiece = tempBoard[target]
+
+                if(targetPiece !== '' && getPieceColor(targetPiece) === color) 
+                    continue
+
+                let validMove = false
+
+                if(piece === whitePawn || piece === blackPawn) {
+                    if(targetPiece === '')
+                        validMove = isValidPawnMove(position, target, piece,tempBoard)
+                    else 
+                        validMove = isValidPawnCapture(position, target, piece)
+                } else if(piece === whiteRook || piece === blackRook) {
+                    validMove = isValidRookMove(position, target, tempBoard)
+                } else if(piece === whiteKnight || piece === blackKnight) {
+                    validMove = isValidKnightMove(position, target)
+                } else if(piece === whiteBishop || piece === blackBishop) {
+                    validMove = isValidBishopMove(position, target, tempBoard)
+                } else if(piece === whiteQueen || piece === blackQueen) {
+                    validMove = isValidQueenMove(position, target, tempBoard)
+                } else if(piece === whiteKing|| piece === blackKing) {
+                    validMove = isValidKingMove(position, target, tempBoard)
+                }
+
+                if(!validMove)
+                    continue
+
+                const simulateMove = simulateMoveInTempBoard(position, target, tempBoard)
+
+                if(!isKingInCheck(color, simulateMove))
+                    return false
+            }
+        }
+        return true
+    }
+
+    function simulateMoveInTempBoard(from, to, board) {
+        const tempBoard = {...board}
+
+        tempBoard[to] = tempBoard[from]
+        tempBoard[from] = ''
+
+        return tempBoard
+    }
+
+    function isKingInCheck(color, board) {
+        const kingPosition = findKing(color, board)
 
         if(kingPosition === null) return false
         
         const enermyColor = color === 'white' ? 'black' : 'white'
 
-        for(const position of Object.keys(pieces)) {
+        for(const position of Object.keys(board)) {
 
-            const piece = pieces[position]
+            const piece = board[position]
 
             if(piece === '') continue
 
             if(getPieceColor(piece) !== enermyColor) continue
 
             if(piece === whitePawn || piece === blackPawn) {
-                if(isValidPawnCapture(position, kingPosition, piece)) {
+                if(isValidPawnCapture(position, kingPosition, piece, board)) {
                     return true
                 }
             }
 
             if(piece === whiteRook || piece === blackRook) {
-                if(isValidRookMove(position, kingPosition)) {
+                if(isValidRookMove(position, kingPosition, board)) {
                     return true
                 }
             }
 
             if(piece === whiteKnight || piece === blackKnight) {
-                if(isValidKnightMove(position, kingPosition)) {
+                if(isValidKnightMove(position, kingPosition, board)) {
                     return true
                 }
             }
 
             if(piece === whiteBishop || piece === blackBishop) {
-                if(isValidBishopMove(position, kingPosition)) {
+                if(isValidBishopMove(position, kingPosition, board)) {
                     return true
                 }
             }
 
             if(piece === whiteQueen || piece === blackQueen) {
-                if(isValidQueenMove(position, kingPosition)) {
+                if(isValidQueenMove(position, kingPosition, board)) {
                     return true
                 }
             }
 
             if(piece === whiteKing || piece === blackKing) {
-                if(isValidKingMove(position, kingPosition)) {
+                if(isValidKingMove(position, kingPosition, board)) {
                     return true
                 }
             }
@@ -142,9 +210,9 @@ const Board = () => {
 
     const [inCheck, setInCheck] = useState('None')
     useEffect(() => {
-        if(isKingInCheck('white')) {
+        if(isKingInCheck('white', pieces)) {
             setInCheck('white')
-        } else if(isKingInCheck('black')) {
+        } else if(isKingInCheck('black', pieces)) {
             setInCheck('black')
         } else {
             setInCheck('None')
@@ -182,7 +250,7 @@ const Board = () => {
         return false
     }
 
-    function isValidRookMove(from, to) {
+    function isValidRookMove(from, to, board) {
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
         
@@ -192,13 +260,13 @@ const Board = () => {
         if(toCol !== fromCol && toRow !== fromRow)
             return false
 
-        if(!isClearPath(from, to)) 
+        if(!isClearPath(from, to, board)) 
             return false
 
         return true
     }
 
-    function isValidBishopMove(from, to) {
+    function isValidBishopMove(from, to, board) {
 
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
@@ -209,26 +277,26 @@ const Board = () => {
         if(!(Math.abs(toCol - fromCol) === Math.abs(toRow - fromRow)))
             return false
 
-        if(!isClearPath(from, to)) 
+        if(!isClearPath(from, to, board)) 
             return false
 
         return true
     }
 
-    function isValidQueenMove(from, to) {
+    function isValidQueenMove(from, to, board) {
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
 
         const toCol = to.charCodeAt(0)
         const toRow = Number(to[1])
 
-        if(!(isValidBishopMove(from, to) || isValidRookMove(from, to)))
+        if(!(isValidBishopMove(from, to, board) || isValidRookMove(from, to, board)))
             return false
 
         return true
     }
 
-    function isValidPawnMove(from, to, piece) {
+    function isValidPawnMove(from, to, piece, board) {
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
 
@@ -243,7 +311,7 @@ const Board = () => {
                 return true
 
             if(fromRow === 2 && toRow - fromRow === 2) {
-                if(!isClearPath(from, to))
+                if(!isClearPath(from, to, board))
                     return false
 
                 return true
@@ -260,7 +328,7 @@ const Board = () => {
                 return true
 
             if(fromRow === 7 && fromRow - toRow === 2) {
-                if(!isClearPath(from, to))
+                if(!isClearPath(from, to, board))
                     return false
 
                 return true
@@ -290,9 +358,9 @@ const Board = () => {
         return null
     }
 
-    function capture(from ,to) {
-        const fromPiece = pieces[from]
-        const toPiece = pieces[to]
+    function capture(from ,to, board) {
+        const fromPiece = board[from]
+        const toPiece = board[to]
 
         const fromColor = getPieceColor(fromPiece)
         const toColor = getPieceColor(toPiece)
@@ -329,8 +397,6 @@ const Board = () => {
         return false
     }
 
-
-
     function movePiece(position) {
         if(select === null) {
             if(pieces[position] === '') return;
@@ -341,16 +407,24 @@ const Board = () => {
             setSelect(pieces[position]) 
             return;
         }
-        if(pieces[position] === '' || capture(prevPos, position)) {
+        if(pieces[position] === '' || capture(prevPos, position, pieces)) {
 
             /* WHITE TURN */
             if(select === whitePawn && turn === 'white') {
-                if(isValidPawnMove(prevPos, position, select) && pieces[position] === ''){
+                if(isValidPawnMove(prevPos, position, select, pieces) && pieces[position] === ''){
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
                     setTurn('black')
-                } else if(isValidPawnCapture(prevPos, position, select)) {
+                } else if(isValidPawnCapture(prevPos, position, select) && capture(prevPos, position, pieces)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -361,7 +435,11 @@ const Board = () => {
             }
 
             if(select === whiteRook && turn === 'white') {
-                if(isValidRookMove(prevPos, position)) {
+                if(isValidRookMove(prevPos, position, pieces)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -373,6 +451,10 @@ const Board = () => {
 
             if(select === whiteKnight && turn === 'white') {
                 if(isValidKnightMove(prevPos, position)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -384,7 +466,11 @@ const Board = () => {
             }
 
             if(select === whiteBishop && turn === 'white') {
-                if(isValidBishopMove(prevPos, position)) {
+                if(isValidBishopMove(prevPos, position, pieces)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -395,10 +481,14 @@ const Board = () => {
             }
 
             if(select === whiteQueen && turn === 'white') {
-                if(isValidQueenMove(prevPos, position)){
+                if(isValidQueenMove(prevPos, position, pieces)){
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
-                    setSelect(null)
+                    setSelect(null) 
                     setTurn('black')
                 } else {
                     setSelect(null)
@@ -407,6 +497,10 @@ const Board = () => {
 
             if(select === whiteKing && turn === 'white') {
                 if(isValidKingMove(prevPos, position)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -418,12 +512,20 @@ const Board = () => {
 
             /* BLACK TURN */
             if(select === blackPawn && turn === 'black') {
-                if(isValidPawnMove(prevPos, position, select) && pieces[position] === '') {
+                if(isValidPawnMove(prevPos, position, select, pieces) && pieces[position] === '') {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
                     setTurn('white')
-                } else if(isValidPawnCapture(prevPos, position, select)) {
+                } else if(isValidPawnCapture(prevPos, position, select) && capture(prevPos, position, pieces)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -434,7 +536,11 @@ const Board = () => {
             }
 
             if(select === blackRook && turn === 'black') {
-                if(isValidRookMove(prevPos, position)) {
+                if(isValidRookMove(prevPos, position, pieces)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -446,6 +552,10 @@ const Board = () => {
 
             if(select === blackKnight && turn === 'black') {
                 if(isValidKnightMove(prevPos, position)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -457,7 +567,11 @@ const Board = () => {
             }
 
             if(select === blackBishop && turn === 'black') {
-                if(isValidBishopMove(prevPos, position)) {
+                if(isValidBishopMove(prevPos, position, pieces)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -468,7 +582,11 @@ const Board = () => {
             }
 
             if(select === blackQueen && turn === 'black') {
-                if(isValidQueenMove(prevPos, position)){
+                if(isValidQueenMove(prevPos, position, pieces)){
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -480,6 +598,10 @@ const Board = () => {
 
             if(select === blackKing && turn === 'black') {
                 if(isValidKingMove(prevPos, position)) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                        setSelect(null)
+                        return
+                    }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
