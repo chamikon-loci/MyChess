@@ -101,6 +101,22 @@ const Board = () => {
         return false
     }
 
+    function isValidRookMove(from, to) {
+        const fromCol = from.charCodeAt(0)
+        const fromRow = Number(from[1])
+        
+        const toCol = to.charCodeAt(0)
+        const toRow = Number(to[1])
+
+        if(toCol !== fromCol && toRow !== fromRow)
+            return false
+
+        if(!isClearPath(from, to)) 
+            return false
+
+        return true
+    }
+
     function isValidBishopMove(from, to) {
 
         const fromCol = from.charCodeAt(0)
@@ -109,61 +125,82 @@ const Board = () => {
         const toCol = to.charCodeAt(0)
         const toRow = Number(to[1])
 
-        
-        if(!isClearPath(from, to)) return false
-
-        if(!(Math.abs(toCol - fromCol) === Math.abs(toRow - fromRow))) {
+        if(!(Math.abs(toCol - fromCol) === Math.abs(toRow - fromRow)))
             return false
-        }
+
+        if(!isClearPath(from, to)) 
+            return false
 
         return true
     }
 
+    function isValidQueenMove(from, to) {
+        const fromCol = from.charCodeAt(0)
+        const fromRow = Number(from[1])
+
+        const toCol = to.charCodeAt(0)
+        const toRow = Number(to[1])
+
+        if(!(isValidBishopMove(from, to) || isValidRookMove(from, to)))
+            return false
+
+        return true
+    }
+
+    function isValidPawnMove(from, to, piece) {
+        const fromCol = from.charCodeAt(0)
+        const fromRow = Number(from[1])
+
+        const toCol = to.charCodeAt(0)
+        const toRow = Number(to[1])
+
+        if(piece === whitePawn) {
+            if(toCol !== fromCol) 
+                return false
+
+            if(toRow - fromRow === 1)
+                return true
+
+            if(fromRow === 2 && toRow - fromRow === 2) {
+                if(!isClearPath(from, to))
+                    return false
+
+                return true
+            }
+
+            return false
+        }
+
+        if(piece === blackPawn) {
+            if(toCol !== fromCol)
+                return false
+
+            if(fromRow - toRow === 1)
+                return true
+
+            if(fromRow === 7 && fromRow - toRow === 2) {
+                if(!isClearPath(from, to))
+                    return false
+
+                return true
+            }
+
+            return false
+        }
+    }
+
     function movePiece(position) {    
         if(select === null) {
+            if(pieces[position] === '') return;
+            
             setPrevPos(position)
-            console.log('prevPos when select is null: ', prevPos)
-            if(pieces[position] === '') {
-                return;
-            }
             setSelect(pieces[position])
             return;
         }
         if(pieces[position] === '') {
-            
-            if(select === '/images/wp.png') {
-                if(prevPos.endsWith('2')) {
-                    if(!position.endsWith('3') && !position.endsWith('4')) {
-                        setPrevPos('')
-                        return;
-                    }
-                    if(position[0] !== prevPos[0]) {
-                        setPrevPos('')
-                        return;
-                    }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
-                    setSelect(null)
 
-                    setPrevPos(position)
-                    console.log('prevPos of pawn move: ', prevPos)
-                } else {
-                    if(position[0] !== prevPos[0]) {
-                        return;
-                    }
-                    if(position[1]-prevPos[1] === 1){
-                        setPieces((prev) => ({...prev, [prevPos]: ''}))
-                        setPieces((prev) => ({...prev, [position]: select}))
-                        setSelect(null)
-                    } 
-                }
-            } 
-
-            if(select === '/images/wr.png') {
-                if(isClearPath(prevPos, position)) {
-                    if(position[0] !== prevPos[0] && position[1] !== prevPos[1]) {
-                        return;
-                    }
+            if(select === whitePawn || select === blackPawn) {
+                if(isValidPawnMove(prevPos, position, select)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
                     setSelect(null)
@@ -172,7 +209,17 @@ const Board = () => {
                 }
             }
 
-            if(select === '/images/wn.png') {
+            if(select === whiteRook || select === blackRook) {
+                if(isValidRookMove(prevPos, position)) {
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                } else {
+                    setSelect(null)
+                }
+            }
+
+            if(select === whiteKnight || select === blackKnight) {
                 if(isValidKnightMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
@@ -183,7 +230,7 @@ const Board = () => {
 
             }
 
-            if(select === '/images/wb.png') {
+            if(select === whiteBishop || select === blackBishop) {
                 if(isValidBishopMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
@@ -193,11 +240,17 @@ const Board = () => {
                 }
             }
 
-            if(select === '/images/wq.png') {
-                
+            if(select === whiteQueen || select === blackQueen) {
+                if(isValidQueenMove(prevPos, position)){
+                    setPieces((prev) => ({...prev, [prevPos]: ''}))
+                    setPieces((prev) => ({...prev, [position]: select}))
+                    setSelect(null)
+                } else {
+                    setSelect(null)
+                }
             }
 
-            if(select === '/images/wk.png') {
+            if(select === whiteKing || select === blackKing) {
                 if(isValidKingMove(prevPos, position)) {
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
