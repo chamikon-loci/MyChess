@@ -189,6 +189,39 @@ const Board = () => {
         }
     }
 
+    function getPieceColor(piece){
+        if(piece === whitePawn ||
+            piece === whiteRook ||
+            piece === whiteKnight ||
+            piece === whiteBishop ||
+            piece === whiteQueen ||
+            piece === whiteKing
+        ) { 
+            return 'white'
+        } else if(piece !== '') {
+            return 'black'
+        } else {
+            return null
+        }
+
+    }
+
+    function capture(from ,to) {
+        const fromPiece = pieces[from]
+        const toPiece = pieces[to]
+
+        const fromColor = getPieceColor(fromPiece)
+        const toColor = getPieceColor(toPiece)
+
+        if(toPiece === '')
+            return false
+
+        if(fromColor === toColor)
+            return false
+
+        return true
+    }
+
     function movePiece(position) {    
         if(select === null) {
             if(pieces[position] === '') return;
@@ -197,7 +230,7 @@ const Board = () => {
             setSelect(pieces[position])
             return;
         }
-        if(pieces[position] === '') {
+        if(pieces[position] === '' || capture(prevPos, position)) {
 
             if(select === whitePawn || select === blackPawn) {
                 if(isValidPawnMove(prevPos, position, select)) {
@@ -262,6 +295,8 @@ const Board = () => {
         }
     }
 
+    const [turn, setTurn] = useState('White')
+
     return (
         <div className='chess-board'>
             {row.map((r, i) => 
@@ -279,6 +314,7 @@ const Board = () => {
                     )
                 }))
             }
+            <div>TURN: {turn}</div>
         </div>
     )
 }
