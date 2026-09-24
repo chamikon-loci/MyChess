@@ -15,7 +15,7 @@ import whiteKing from '../images/wk.png'
 
 import whitePawn from '../images/wp.png'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const Board = () => {
 
@@ -71,6 +71,85 @@ const Board = () => {
 
         return true
     }
+
+    function findKing(color) {
+        const king = color === 'white' ? whiteKing : blackKing
+
+        for(const position of Object.keys(pieces)) {
+            if(pieces[position] === king)
+                return position
+        }
+
+        return null
+    }  
+
+    function isKingInCheck(color) {
+        const kingPosition = findKing(color)
+
+        if(kingPosition === null) return false
+        
+        const enermyColor = color === 'white' ? 'black' : 'white'
+
+        for(const position of Object.keys(pieces)) {
+
+            const piece = pieces[position]
+
+            if(piece === '') continue
+
+            if(getPieceColor(piece) !== enermyColor) continue
+
+            if(piece === whitePawn || piece === blackPawn) {
+                if(isValidPawnCapture(position, kingPosition, piece)) {
+                    return true
+                }
+            }
+
+            if(piece === whiteRook || piece === blackRook) {
+                if(isValidRookMove(position, kingPosition)) {
+                    return true
+                }
+            }
+
+            if(piece === whiteKnight || piece === blackKnight) {
+                if(isValidKnightMove(position, kingPosition)) {
+                    return true
+                }
+            }
+
+            if(piece === whiteBishop || piece === blackBishop) {
+                if(isValidBishopMove(position, kingPosition)) {
+                    return true
+                }
+            }
+
+            if(piece === whiteQueen || piece === blackQueen) {
+                if(isValidQueenMove(position, kingPosition)) {
+                    return true
+                }
+            }
+
+            if(piece === whiteKing || piece === blackKing) {
+                if(isValidKingMove(position, kingPosition)) {
+                    return true
+                }
+            }
+            
+        }
+
+        return false
+
+    }
+
+    const [inCheck, setInCheck] = useState('None')
+    useEffect(() => {
+        if(isKingInCheck('white')) {
+            setInCheck('white')
+        } else if(isKingInCheck('black')) {
+            setInCheck('black')
+        } else {
+            setInCheck('None')
+        }
+    }, [pieces])
 
     function isValidKnightMove(from, to) {
 
@@ -250,6 +329,8 @@ const Board = () => {
         return false
     }
 
+
+
     function movePiece(position) {
         if(select === null) {
             if(pieces[position] === '') return;
@@ -427,7 +508,7 @@ const Board = () => {
                     )
                 }))
             }
-            <div>TURN: {turn}</div>
+            <div>TURN: {turn} inCheck: {inCheck}</div>
         </div>
     )
 }
