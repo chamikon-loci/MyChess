@@ -1,7 +1,7 @@
 Tech Stack : 
 React.js สำหรับหน้า UI ฝั่ง Client
 Express.js(Node.js) สำหรับการสร้าง Server REST API
-PostgreSQL สำหรับเก็บข้อมูล
+PostgreSQL สำหรับเก็บข้อมูล [ไม่เอาละ ขี้เกียจทำ แค่ทำเกมก็โคตรยากละ]
 Socket.io สำหรับ Real-time communication ระหว่าง Clients กับ Server
 CORS สำหรับให้ฝั่ง Client ติดต่อกับ Server ได้จากคนละ Origin
 
@@ -10,7 +10,7 @@ CORS สำหรับให้ฝั่ง Client ติดต่อกับ 
 - การเดินหมากตามกฏของแต่ละตัว
 - กฏการกิน
 - กฏการเข้าป้อม
-- กฏ En Passant
+- กฏ En Passant [ช่างมันก่อนก็แล้วกันน้าาา]
 - กฏการ Check
 - กฏการ Checkmate
 - กฏการ Promotion
@@ -25,5 +25,13 @@ _________________________________________________________
 
 Development Plan
 1. สร้าง Server พื้นฐาน [Done]
-2. เชื่อมต่อ Frontend กับ Socket.io [Done]
-3. สร้างหน้า UI ตารางหมากรุก มีตัวหมากและเดินได้ตามกฏจริง
+2. ทดลอง/เรียนรู้การเชื่อมต่อ Frontend กับ Socket.io [Done]
+3. สร้างหน้า UI ตารางหมากรุก มีตัวหมากและเดินได้ตามกฏจริง [Done]
+4. กฏการกิน [Done]
+5. กฏการ Promotion [Done]
+6. กฏการ Check [Done]
+7. กฏการ Checkmate [Done]
+8. กฏการ Statemate [Done]
+9. สร้างระบบเข้าห้องเกมและการเรี่มเกม [Done]
+
+Complete Version 1 แบบกาก ๆ น้าาา

@@ -17,6 +17,9 @@ import whitePawn from '../images/wp.png'
 
 import { useState, useEffect } from 'react'
 
+import io from 'socket.io-client'
+const socket = io.connect('http://localhost:3001')
+
 const Board = () => {
 
     const row = []
@@ -234,7 +237,14 @@ const Board = () => {
             setWinner('None')
             setDraw(false)
         }
-    }, [pieces])
+    }, [pieces, turn])
+
+    useEffect(() => {
+        socket.on('newBoard', (data) => {
+            setPieces(data.board)
+            setTurn(data.turn)
+        })
+    }, [])
 
     function isValidKnightMove(from, to) {
 
@@ -450,13 +460,14 @@ const Board = () => {
 
     function promote(piece) {
         console.log('promote to: ', promotion)
-        setPieces((prev) => ({...prev, [promotion.position]: piece}))
+        const newBoard = {...pieces}
+        newBoard[promotion.position] = piece
+        setPieces(newBoard)
+        socket.emit('moved', {
+            joined_room: joined_room,
+            board: newBoard
+        })
         setPromotion(null)
-        if(promotion.color === 'white') {
-            setTurn('black')
-        } else {
-            setTurn('white')
-        }
     }
     
     const [draw, setDraw] = useState(false)
@@ -511,7 +522,7 @@ const Board = () => {
 
     function movePiece(position) {
 
-        if(winner !== 'None')
+        if(winner !== 'None' || draw)
             return
 
         if(promotion !== null)
@@ -521,6 +532,8 @@ const Board = () => {
             if(pieces[position] === '') return;
 
             if(getPieceColor(pieces[position]) !== turn) return
+
+            if(getPieceColor(pieces[position]) !== myColor) return
             
             setPrevPos(position)
             setSelect(pieces[position]) 
@@ -535,34 +548,36 @@ const Board = () => {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     if(isPromotion(select, position)){
                         console.log('White get promotion')
                         setPromotion({
                             color: 'white',
                             position: position
                         })
-                    } else {
-                        setTurn('black')
-                    }
+                    } 
                     setSelect(null)
                 } else if(isValidPawnCapture(prevPos, position, select) && capture(prevPos, position, pieces)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     if(isPromotion(select, position)){
                         console.log('White get promotion')
                         setPromotion({
                             color: 'white',
                             position: position
                         })
-                    } else {
-                        setTurn('black')
-                    }
+                    } 
                     setSelect(null)
                 } else {
                     setSelect(null)
@@ -571,14 +586,16 @@ const Board = () => {
 
             if(select === whiteRook && turn === 'white') {
                 if(isValidRookMove(prevPos, position, pieces)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
@@ -586,14 +603,16 @@ const Board = () => {
 
             if(select === whiteKnight && turn === 'white') {
                 if(isValidKnightMove(prevPos, position)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
@@ -602,14 +621,16 @@ const Board = () => {
 
             if(select === whiteBishop && turn === 'white') {
                 if(isValidBishopMove(prevPos, position, pieces)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
@@ -617,14 +638,16 @@ const Board = () => {
 
             if(select === whiteQueen && turn === 'white') {
                 if(isValidQueenMove(prevPos, position, pieces)){
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null) 
-                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
@@ -632,14 +655,16 @@ const Board = () => {
 
             if(select === whiteKing && turn === 'white') {
                 if(isValidKingMove(prevPos, position)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
@@ -648,37 +673,39 @@ const Board = () => {
             /* BLACK TURN */
             if(select === blackPawn && turn === 'black') {
                 if(isValidPawnMove(prevPos, position, select, pieces) && pieces[position] === '') {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     if(isPromotion(select, position)){
                         console.log('Black get promotion')
                         setPromotion({
                             color: 'black',
                             position: position
                         })
-                    } else {
-                        setTurn('white')
                     }
                     setSelect(null)
                 } else if(isValidPawnCapture(prevPos, position, select) && capture(prevPos, position, pieces)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     if(isPromotion(select, position)){
                         console.log('Black get promotion')
                         setPromotion({
                             color: 'black',
                             position: position
                         })
-                    } else {
-                        setTurn('white')
                     }
                     setSelect(null)
                 }
@@ -686,14 +713,16 @@ const Board = () => {
 
             if(select === blackRook && turn === 'black') {
                 if(isValidRookMove(prevPos, position, pieces)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('white')
                 } else {
                     setSelect(null)
                 }
@@ -701,14 +730,16 @@ const Board = () => {
 
             if(select === blackKnight && turn === 'black') {
                 if(isValidKnightMove(prevPos, position)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('white')
                 } else {
                     setSelect(null)
                 }
@@ -717,14 +748,16 @@ const Board = () => {
 
             if(select === blackBishop && turn === 'black') {
                 if(isValidBishopMove(prevPos, position, pieces)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('white')
                 } else {
                     setSelect(null)
                 }
@@ -732,14 +765,16 @@ const Board = () => {
 
             if(select === blackQueen && turn === 'black') {
                 if(isValidQueenMove(prevPos, position, pieces)){
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('white')
                 } else {
                     setSelect(null)
                 }
@@ -747,20 +782,51 @@ const Board = () => {
 
             if(select === blackKing && turn === 'black') {
                 if(isValidKingMove(prevPos, position)) {
-                    if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'black', pieces)) {
                         setSelect(null)
                         return
                     }
-                    setPieces((prev) => ({...prev, [prevPos]: ''}))
-                    setPieces((prev) => ({...prev, [position]: select}))
+                    const newBoard = {...pieces}
+                    newBoard[prevPos] = ''
+                    newBoard[position] = select
+                    setPieces(newBoard)
+                    socket.emit('moved', {joined_room: joined_room, board: newBoard})
                     setSelect(null)
-                    setTurn('white')
                 } else {
                     setSelect(null)
                 }
             }
         }
     }
+
+    const [room, setRoom] = useState('')
+    const [joined_room, setJoined_Room] = useState('')
+    const [myColor, setMyColor] = useState('')
+    function join_room(room){
+
+        if(room !== ''){
+            socket.emit('join_room', {room: room})
+        }
+    }
+
+    useEffect(() => {
+        socket.on('joined', (data) => {
+            setJoined_Room(data.room)
+            setMyColor(data.yourcolor)
+            setTurn(data.turn)
+            if(data.board !== null)
+                setPieces(data.board)
+        })
+
+        socket.on('newBoard', (data) => {
+            setPieces(data.board)
+            setTurn(data.turn)
+        })
+
+        socket.on('room_full', () => {
+            alert('Room is full')
+        })
+    }, [socket])
 
     return (
         <div className='chess-board'>
@@ -797,6 +863,11 @@ const Board = () => {
                     )}
                 </div>
             )}
+            <div>
+                <input placeholder='room number' value={room} onChange={(e) => setRoom(e.target.value)}/>
+                <button onClick={() => join_room(room)}>Join Room</button>
+                <p>{joined_room} Your Color: {myColor}</p>
+            </div>
         </div>
     )
 }
