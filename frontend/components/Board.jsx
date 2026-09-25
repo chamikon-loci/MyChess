@@ -18,7 +18,7 @@ import whitePawn from '../images/wp.png'
 import { useState, useEffect } from 'react'
 
 import io from 'socket.io-client'
-const socket = io.connect('http://localhost:3001')
+const socket = io.connect(import.meta.env.VITE_SOCKET_URL)
 
 const Board = () => {
 

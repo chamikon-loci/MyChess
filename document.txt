@@ -4,6 +4,7 @@ Express.js(Node.js) สำหรับการสร้าง Server REST API
 PostgreSQL สำหรับเก็บข้อมูล [ไม่เอาละ ขี้เกียจทำ แค่ทำเกมก็โคตรยากละ]
 Socket.io สำหรับ Real-time communication ระหว่าง Clients กับ Server
 CORS สำหรับให้ฝั่ง Client ติดต่อกับ Server ได้จากคนละ Origin
+Render สำหรับการ Deploy
 
 ตัวเกมหมากรุก
 - ตาราง 8x8
