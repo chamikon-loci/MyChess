@@ -45,6 +45,8 @@ const Board = () => {
 
     const [turn, setTurn] = useState('white')
 
+    const [winner, setWinner] = useState('None')
+
     function isClearPath(from, to, board) {
         const fromCol = from.charCodeAt(0)
         const fromRow = Number(from[1])
@@ -83,8 +85,8 @@ const Board = () => {
         return null
     }
 
-    function wouldLeaveKingInCheck(from, to, color) {
-        const tempBoard = {...pieces}
+    function wouldLeaveKingInCheck(from, to, color, board) {
+        const tempBoard = {...board}
 
         tempBoard[to] = tempBoard[from]
         tempBoard[from] = ''
@@ -99,6 +101,7 @@ const Board = () => {
             return false
 
         for(const position of Object.keys(tempBoard)) {
+
             const piece = tempBoard[position]
 
             if(getPieceColor(piece) !== color) 
@@ -216,6 +219,20 @@ const Board = () => {
             setInCheck('black')
         } else {
             setInCheck('None')
+        }
+
+        if(isCheckMate('black')) {
+            setWinner('white')
+            setDraw(false)
+        } else if(isCheckMate('white')) {
+            setWinner('black')
+            setDraw(false)
+        } else if(isStatemate('black') || isStatemate('white')) {
+            setWinner('None')
+            setDraw(true)
+        } else {
+            setWinner('None')
+            setDraw(false)
         }
     }, [pieces])
 
@@ -397,7 +414,109 @@ const Board = () => {
         return false
     }
 
+    const whitePromotionList = [
+        whiteKnight,
+        whiteBishop,
+        whiteRook,
+        whiteQueen
+    ]
+
+    const blackPromotionList = [
+        blackKnight,
+        blackBishop,
+        blackRook,
+        blackQueen
+    ]
+    
+    function isPromotion(piece, to) {
+        const toRow = Number(to[1])
+
+        if(piece === whitePawn) {
+            if(toRow === 8) {
+                return true
+            }
+        }
+
+        if(piece === blackPawn) {
+            if(toRow === 1) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    const [promotion, setPromotion] = useState(null)
+
+    function promote(piece) {
+        console.log('promote to: ', promotion)
+        setPieces((prev) => ({...prev, [promotion.position]: piece}))
+        setPromotion(null)
+        if(promotion.color === 'white') {
+            setTurn('black')
+        } else {
+            setTurn('white')
+        }
+    }
+    
+    const [draw, setDraw] = useState(false)
+    function isStatemate(color) {
+
+        const tempBoard = {...pieces}
+
+        if(isKingInCheck(color, tempBoard))
+            return false
+
+        for(const position of Object.keys(tempBoard)) {
+            const piece = tempBoard[position]
+            if(getPieceColor(piece) !== color) continue
+
+            for(const target of Object.keys(tempBoard)){
+                const targetPiece = tempBoard[target]
+
+                if(targetPiece !== '' && getPieceColor(targetPiece) === color) continue
+
+                let validMove = false
+
+                if(piece === whitePawn || piece === blackPawn) {
+                    if(targetPiece === '')
+                        validMove = isValidPawnMove(position, target, piece,tempBoard)
+                    else 
+                        validMove = isValidPawnCapture(position, target, piece)
+                } else if(piece === whiteRook || piece === blackRook) {
+                    validMove = isValidRookMove(position, target, tempBoard)
+                } else if(piece === whiteKnight || piece === blackKnight) {
+                    validMove = isValidKnightMove(position, target)
+                } else if(piece === whiteBishop || piece === blackBishop) {
+                    validMove = isValidBishopMove(position, target, tempBoard)
+                } else if(piece === whiteQueen || piece === blackQueen) {
+                    validMove = isValidQueenMove(position, target, tempBoard)
+                } else if(piece === whiteKing|| piece === blackKing) {
+                    validMove = isValidKingMove(position, target, tempBoard)
+                }
+
+                if(!validMove)
+                    continue
+
+                const simulateMove = simulateMoveInTempBoard(position, target, tempBoard)
+
+                if(!isKingInCheck(color, simulateMove))
+                    return false
+            }
+        }
+
+        return true
+        
+    }
+
     function movePiece(position) {
+
+        if(winner !== 'None')
+            return
+
+        if(promotion !== null)
+            return
+
         if(select === null) {
             if(pieces[position] === '') return;
 
@@ -412,14 +531,22 @@ const Board = () => {
             /* WHITE TURN */
             if(select === whitePawn && turn === 'white') {
                 if(isValidPawnMove(prevPos, position, select, pieces) && pieces[position] === ''){
-                    if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
+                    if(wouldLeaveKingInCheck(prevPos, position, 'white', pieces)) {
                         setSelect(null)
                         return
                     }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
+                    if(isPromotion(select, position)){
+                        console.log('White get promotion')
+                        setPromotion({
+                            color: 'white',
+                            position: position
+                        })
+                    } else {
+                        setTurn('black')
+                    }
                     setSelect(null)
-                    setTurn('black')
                 } else if(isValidPawnCapture(prevPos, position, select) && capture(prevPos, position, pieces)) {
                     if(wouldLeaveKingInCheck(prevPos, position, 'white')) {
                         setSelect(null)
@@ -427,8 +554,16 @@ const Board = () => {
                     }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
+                    if(isPromotion(select, position)){
+                        console.log('White get promotion')
+                        setPromotion({
+                            color: 'white',
+                            position: position
+                        })
+                    } else {
+                        setTurn('black')
+                    }
                     setSelect(null)
-                    setTurn('black')
                 } else {
                     setSelect(null)
                 }
@@ -519,8 +654,16 @@ const Board = () => {
                     }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
+                    if(isPromotion(select, position)){
+                        console.log('Black get promotion')
+                        setPromotion({
+                            color: 'black',
+                            position: position
+                        })
+                    } else {
+                        setTurn('white')
+                    }
                     setSelect(null)
-                    setTurn('white')
                 } else if(isValidPawnCapture(prevPos, position, select) && capture(prevPos, position, pieces)) {
                     if(wouldLeaveKingInCheck(prevPos, position, 'black')) {
                         setSelect(null)
@@ -528,9 +671,15 @@ const Board = () => {
                     }
                     setPieces((prev) => ({...prev, [prevPos]: ''}))
                     setPieces((prev) => ({...prev, [position]: select}))
-                    setSelect(null)
-                    setTurn('white')
-                } else {
+                    if(isPromotion(select, position)){
+                        console.log('Black get promotion')
+                        setPromotion({
+                            color: 'black',
+                            position: position
+                        })
+                    } else {
+                        setTurn('white')
+                    }
                     setSelect(null)
                 }
             }
@@ -630,7 +779,24 @@ const Board = () => {
                     )
                 }))
             }
-            <div>TURN: {turn} inCheck: {inCheck}</div>
+            <div>TURN: {turn} inCheck: {inCheck} Winner: {winner} Draw: {draw}</div>
+            {promotion !== null && (
+                <div>
+                    {promotion.color === 'white' ? (
+                        whitePromotionList.map(piece => (
+                            <button key={piece} onClick={() => promote(piece)}>
+                                <img src={piece} />
+                            </button>
+                        ))
+                    ) : (
+                            blackPromotionList.map(piece => (
+                            <button key={piece} onClick={() => promote(piece)}>
+                                <img src={piece} />
+                            </button>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     )
 }
